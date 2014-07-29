@@ -1,0 +1,134 @@
+package jmankhan.tilegame.levels;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+
+import jmankhan.tilegame.Game;
+import jmankhan.tilegame.tiles.Tile;
+
+/**
+ * Tile based map system. Reads blueprint from text and image files and builds the map accordingly.
+ * Uses hex based color reading and  
+ * @author Jalal
+ *
+ */
+public class Level 
+{
+	private int[][] tiles;
+	private int w, h;
+
+	/**
+	 * Constructor
+	 * @param levelImage pixel image file of the level to use
+	 */
+	public Level(BufferedImage levelImage)
+	{
+		w = levelImage.getWidth();
+		h = levelImage.getHeight();
+		loadLevel(levelImage);
+	}
+
+	/**
+	 * reads colors from image file
+	 * @param levelImage
+	 */
+	public void loadLevel(BufferedImage levelImage)
+	{
+		tiles = new int[levelImage.getWidth()][levelImage.getHeight()];
+		for(int y = 0;y < levelImage.getHeight();y++){
+			for(int x = 0;x < levelImage.getWidth();x++){
+				Color c = new Color(levelImage.getRGB(x, y));
+				String hex = String.format("%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
+
+				//reads the color in the pixel map and converts it to text, which is held in memory
+				switch(hex)
+				{
+				case "00ff00"://GRASS TILE - 1
+					tiles[x][y] = 1;
+					break;
+				case "22ab1f"://DIRT TILE - 2
+					tiles[x][y] = 2;
+					break;
+				case "004bb4": //WATER TILE - 3
+					tiles[x][y] = 3;
+					break;
+				case "298429"://ROCK TILE - 4
+					tiles[x][y] = 4;
+					break;
+				case "5f4000"://TREE TILE - 5
+					tiles[x][y] = 5;
+					break;
+				case "002b00"://WALL TILE - 6
+					tiles[x][y] = 6;
+					break;
+				case "ffffff": //trundle - 7
+					tiles[x][y] = 7;
+					break;
+				default:
+					tiles[x][y] = 1;
+					break;
+				}
+			}
+		}
+	}
+
+	public void update()
+	{
+	}
+
+	/**
+	 * render loop
+	 * @param g the graphics object to draw with
+	 */
+	public void render(Graphics g)
+	{
+		int xo = Game.getPlayer().getXO();
+		int yo = Game.getPlayer().getYO();
+
+		int x0 = Math.max(xo/(Game.TILE_SIZE*Game.SCALE), 0);
+		int y0 = Math.max(yo/(Game.TILE_SIZE*Game.SCALE), 0);
+		int x1 = Math.min((xo+Game.WIDTH*Game.SCALE)/(Game.TILE_SIZE*Game.SCALE) + 1, w);
+		int y1 = Math.min((yo+Game.HEIGHT*Game.SCALE)/(Game.TILE_SIZE*Game.SCALE) + 1, h);
+
+		for(int y=y0;y<y1;y++)
+		{
+			for(int x=x0;x<x1;x++)
+			{
+				getTile(x, y).render(g, x * Game.TILE_SIZE * Game.SCALE-xo, y * Game.TILE_SIZE * Game.SCALE-yo);
+			}
+		}
+	}
+
+	/**
+	 * Get the tile at the location, returns noTile if invalid location
+	 * @param x x coordinate
+	 * @param y y coordinate
+	 * @return tile at coordinates
+	 */
+	public Tile getTile(int x, int y)
+	{
+		if(x<0 || y<0 || x>=w || y>=h)
+			return Tile.notile;
+		
+		switch(tiles[x][y]){
+		case 1:
+			return Tile.grass;
+		case 2:
+			return Tile.dirt;
+		case 3:
+			return Tile.water;
+		case 4:
+			return Tile.rock;
+		case 5:
+			return Tile.tree;
+		case 6:
+			return Tile.wall;
+		case 7:
+			return Tile.trundle;
+		default:
+			return Tile.notile;
+		}
+	}
+}
